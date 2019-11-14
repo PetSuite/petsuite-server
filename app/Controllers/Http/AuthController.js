@@ -10,7 +10,7 @@ class AuthController {
       let user = await User.findBy('email', email)
       if (user) {
         if (await Hash.verify(password, user.password)) {
-          const token = await auth.generate(user)
+          const token = await auth.attempt(email, password)
 
           return response.status(200).json({
             status: true,

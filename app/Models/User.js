@@ -7,6 +7,10 @@ const Model = use('Model')
 const Hash = use('Hash')
 
 class User extends Model {
+  pet() {
+    return this.hasOne('App/Models/Pet')
+  }
+
   static boot() {
     super.boot()
 

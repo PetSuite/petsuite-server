@@ -9,52 +9,45 @@
  */
 const User = use('App/Models/User')
 const Hash = use('Hash')
+const Database = use('Database')
 class UserController {
-  /**
-   * Show a list of all users.
-   * GET users
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async index({ request, response, view }) {
+  async index({ request, response, auth }) {
     try {
       const user = await User.query()
-        .select(['_id', 'email', 'username', 'role'])
+        .select(['_id', 'firstname', 'lastname', 'email', 'role'])
         .orderBy('updated_at', 'desc')
         .fetch()
-
+      const data = await request.all()
       return response.status(200).json({ status: true, users: user })
     } catch (err) {
       return response.status(401).json({ status: false, message: err })
     }
   }
 
-  /**
-   * Create/save a new user.
-   * POST users
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async store({ request, response }) {
+  async store({ request, response, auth }) {
     try {
-      const {
-        firstname,
-        lastname,
-        email,
-        username,
-        password,
-        role
-      } = await request.all()
+      const { firstname, lastname, email, password, role } = await request.all()
+
+      if (auth.user.role == 'Employee') {
+        if (role == 'Manager') {
+          return response.status(400).json({
+            status: false,
+            message: 'You are not authorize to add Manager account'
+          })
+        }
+      }
+      if (auth.user.role == 'Pet Owner') {
+        if (role == 'Manager' || role == 'Employee') {
+          return response.status(400).json({
+            status: false,
+            message: 'You are not athorized to add Manager or Employee account'
+          })
+        }
+      }
       const user = await User.create({
         firstname,
         lastname,
         email,
-        username,
         password,
         role
       })
@@ -66,44 +59,27 @@ class UserController {
     }
   }
 
-  /**
-   * Display a single user.
-   * GET users/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async show({ user, response }) {
+  async show({ user, response, auth }) {
     try {
+      // return response.json(auth.user._id)
       return response.status(200).json({
         status: true,
-        user: { email: user.email, username: user.username, role: user.role }
+        user: {
+          firstname: user.firstname,
+          lastname: user.lastname,
+          email: user.email,
+          role: user.role
+        }
       })
     } catch (err) {
       return response.status(500).json({ status: false, message: err })
     }
   }
 
-  /**
-   * Update user details.
-   * PUT or PATCH users/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
   async update({ user, response, request }) {
     try {
-      const {
-        firname,
-        lastname,
-        email,
-        username,
-        role,
-        password
-      } = await request.all()
+      const { firstname, lastname, email, role, password } = await request.all()
+
       if (firstname) {
         user.firstname = firstname
       }
@@ -112,9 +88,6 @@ class UserController {
       }
       if (email) {
         user.email = email
-      }
-      if (username) {
-        user.username = username
       }
       if (role) {
         user.role = role
@@ -125,21 +98,44 @@ class UserController {
       await user.save()
       return response
         .status(200)
-        .json({ status: false, message: 'Successfully updated user' })
+        .json({ status: true, message: 'Successfully updated user' })
     } catch (err) {
       return response.status(500).json({ status: false, message: err })
     }
   }
 
-  /**
-   * Delete a user with id.
-   * DELETE users/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async destroy({ params, request, response }) {}
+  async destroy({ user, request, response }) {
+    try {
+      await user.delete()
+      return response
+        .status(200)
+        .json({ status: true, message: 'Successfully delete user' })
+    } catch (err) {
+      return response.status(500).json({ status: false })
+    }
+  }
+
+  async owner({ request, response }) {
+    try {
+      const { key } = await request.all()
+      //return response.json(owner)
+
+      const list = await User.query()
+        .select(['_id', 'firstname', 'lastname', 'email'])
+        .where({
+          $or: [
+            { firstname: new RegExp(key, 'ig') },
+            { lastname: new RegExp(key, 'ig') }
+          ]
+        })
+        .fetch()
+
+      // return response.json('test')
+      return response.status(200).json({ status: true, owners: list })
+    } catch (err) {
+      return response.status(500).json({ status: false, message: err })
+    }
+  }
 }
 
 module.exports = UserController

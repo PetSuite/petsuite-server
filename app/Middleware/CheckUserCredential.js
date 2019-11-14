@@ -11,21 +11,8 @@ class CheckUserCredential {
    * @param {Function} next
    */
   async handle(ctx, next) {
-    const { username, password } = await ctx.request.all()
-    const user = await User.findBy('username', username)
-
-    if (user) {
-      if (await Hash.verify(password, user.password)) {
-        ctx.user = user
-        await next()
-      }
-      return ctx.response
-        .status(400)
-        .json({ status: false, message: 'Incorrect password' })
-    }
-    return ctx.response
-      .status(404)
-      .json({ status: false, message: 'User not exist' })
+    return ctx.response.json({ status: true, user: ctx.auth.user._id })
+    await next()
     // call next to advance the request
   }
 }
