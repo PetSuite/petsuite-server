@@ -28,7 +28,10 @@ Route.group(() => {
     .validator(new Map([[['store'], ['User']]]))
     .middleware(
       new Map([
-        [['show', 'destroy', 'update'], ['findUser', 'auth:jwt']],
+        [
+          ['show', 'destroy', 'update'],
+          ['findUser', 'auth:jwt']
+        ],
         [['index', 'store'], ['auth:jwt']]
       ])
     )
@@ -39,15 +42,32 @@ Route.group(() => {
 
 Route.group(() => {
   Route.resource('pets', 'PetController').middleware(
-    new Map([[['show', 'index', 'store', 'update', 'destroy'], ['auth:jwt']]])
+    new Map([
+      [['show', 'destroy', 'update'], ['findPet']],
+      [['show', 'store', 'update', 'destroy'], ['checkRole']]
+    ])
   )
-}).prefix('api')
-
-Route.group(() => {
-  Route.resource('pets', 'PetController')
-}).prefix('api')
+})
+  .prefix('api')
+  .middleware('auth:jwt')
 
 Route.group(() => {
   Route.get('search', 'SearchController.search')
   Route.get('searchUser', 'SearchController.searchUser')
 }).prefix('api')
+
+Route.group(() => {
+  Route.resource('booking', 'BookingController').middleware(
+    new Map([[['store'], ['checkRole']]])
+  )
+})
+  .prefix('api')
+  .middleware('auth:jwt')
+
+Route.group(() => {
+  Route.resource('setting', 'SettingController').middleware(
+    new Map([[['store'], ['checkRole']]])
+  )
+})
+  .prefix('api')
+  .middleware('auth:jwt')

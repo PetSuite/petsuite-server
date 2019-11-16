@@ -13,12 +13,16 @@ const Database = use('Database')
 class UserController {
   async index({ request, response, auth }) {
     try {
+      const { page } = await request.all()
       const user = await User.query()
-        .select(['_id', 'firstname', 'lastname', 'email', 'role'])
+        .setHidden(['password', 'created_at'])
         .orderBy('updated_at', 'desc')
-        .fetch()
-      const data = await request.all()
-      return response.status(200).json({ status: true, users: user })
+        .paginate(page, 10)
+      return response.status(200).json({
+        status: true,
+        users: user.rows,
+        page: user.pages
+      })
     } catch (err) {
       return response.status(401).json({ status: false, message: err })
     }
@@ -121,9 +125,10 @@ class UserController {
       //return response.json(owner)
 
       const list = await User.query()
-        .select(['_id', 'firstname', 'lastname', 'email'])
+        .select('email')
         .where({
           $or: [
+            { email: new RegExp(key, 'ig') },
             { firstname: new RegExp(key, 'ig') },
             { lastname: new RegExp(key, 'ig') }
           ]
@@ -131,7 +136,7 @@ class UserController {
         .fetch()
 
       // return response.json('test')
-      return response.status(200).json({ status: true, owners: list })
+      return response.status(200).json({ status: true, owners: list.rows })
     } catch (err) {
       return response.status(500).json({ status: false, message: err })
     }

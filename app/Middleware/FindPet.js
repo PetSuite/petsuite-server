@@ -13,7 +13,7 @@ class FindPet {
   async handle(ctx, next) {
     // call next to advance the request
     const pet = await Pet.find(ctx.params.id)
-    if (!user) {
+    if (!pet) {
       return ctx.response
         .status(404)
         .json({ status: false, message: 'Pet not found' })
