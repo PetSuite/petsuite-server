@@ -25,31 +25,64 @@ Route.group(() => {
 
 Route.group(() => {
   Route.resource('users', 'UserController')
-    .validator(new Map([[['store'], ['User']]]))
+    .validator(
+      new Map([
+        [
+          [
+            'store'
+          ],
+          [
+            'User'
+          ]
+        ]
+      ])
+    )
     .middleware(
       new Map([
         [
-          ['show', 'destroy', 'update'],
-          ['findUser', 'auth:jwt']
-        ],
-        [['index', 'store'], ['auth:jwt']]
+          [
+            'show',
+            'destroy',
+            'update'
+          ],
+          [
+            'findUser',
+            'auth:jwt'
+          ]
+        ]
       ])
     )
   Route.get('owner', 'UserController.owner')
-})
-  .prefix('api')
-  .middleware('auth')
+}).prefix('api')
 
 Route.group(() => {
+  Route.get('pets/search', 'PetController.petSearch')
   Route.resource('pets', 'PetController').middleware(
     new Map([
-      [['show', 'destroy', 'update'], ['findPet']],
-      [['show', 'store', 'update', 'destroy'], ['checkRole']]
+      [
+        [
+          'show',
+          'destroy',
+          'update'
+        ],
+        [
+          'findPet'
+        ]
+      ],
+      [
+        [
+          'show',
+          'store',
+          'update',
+          'destroy'
+        ],
+        [
+          'checkRole'
+        ]
+      ]
     ])
   )
-})
-  .prefix('api')
-  .middleware('auth:jwt')
+}).prefix('api')
 
 Route.group(() => {
   Route.get('search', 'SearchController.search')
@@ -58,7 +91,16 @@ Route.group(() => {
 
 Route.group(() => {
   Route.resource('booking', 'BookingController').middleware(
-    new Map([[['store'], ['checkRole']]])
+    new Map([
+      [
+        [
+          'store'
+        ],
+        [
+          'checkRole'
+        ]
+      ]
+    ])
   )
 })
   .prefix('api')
@@ -66,7 +108,16 @@ Route.group(() => {
 
 Route.group(() => {
   Route.resource('setting', 'SettingController').middleware(
-    new Map([[['store'], ['checkRole']]])
+    new Map([
+      [
+        [
+          'store'
+        ],
+        [
+          'checkRole'
+        ]
+      ]
+    ])
   )
 })
   .prefix('api')
